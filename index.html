@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROCON Maceió — Sistema de Gestão de PAS</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--navy:#0f1b2d;--navy-mid:#1a2f4e;--gold:#c9a84c;--gold-light:#e8c97a;--gold-pale:#f5e9c8;--cream:#faf8f3;--white:#fff;--tm:#1a1a2e;--tmut:#5a6a7e;--tlt:#8a9ab0;--bord:#e2e8f0;--bord-d:#c5d0dd;--suc:#1a7a4a;--suc-bg:#e8f7ef;--warn:#9a6a00;--warn-bg:#fef9e7;--dan:#9a2a2a;--dan-bg:#fdf2f2;--inf:#1a4a9a;--inf-bg:#eef4fd;--sw:260px;--th:60px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--cream);color:var(--tm);min-height:100vh}
+#app{display:flex;min-height:100vh}
+.sidebar{width:var(--sw);background:var(--navy);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column}
+.topbar{height:var(--th);background:#fff;border-bottom:1px solid var(--bord);display:flex;align-items:center;padding:0 2rem;gap:1rem;position:sticky;top:0;z-index:50}
+.content{flex:1;padding:2rem;max-width:1400px}
+.sbrand{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sbrand-t{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold-light);line-height:1.2}
+.sbrand-s{font-size:.65rem;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.snav{padding:1rem 0;flex:1}
+.snav-lbl{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:.75rem 1.25rem .25rem}
+.ni{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.25rem;cursor:pointer;color:rgba(255,255,255,.7);font-size:.875rem;border-left:3px solid transparent;transition:all .15s}
+.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.ni.active{background:rgba(201,168,76,.15);color:var(--gold-light);border-left-color:var(--gold)}
+.nic{width:18px;height:18px;opacity:.85;flex-shrink:0}
+.sfooter{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.08);font-size:.7rem;color:rgba(255,255,255,.3)}
+.topbar-title{font-size:1rem;font-weight:600;color:var(--tm)}
+.topbar-bc{font-size:.8rem;color:var(--tmut)}
+.topbar-act{margin-left:auto;display:flex;gap:.75rem;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:6px;font-size:.85rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy-mid)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:#fff;color:var(--tm);border:1px solid var(--bord-d)}.btn-outline:hover{background:var(--cream)}
+.btn-pdf{background:#c0392b;color:#fff}.btn-pdf:hover{background:#a93226}
+.btn-csv{background:var(--suc);color:#fff}.btn-csv:hover{opacity:.9}
+.btn-sm{padding:.35rem .75rem;font-size:.8rem}
+.btn-icon{padding:.4rem;border-radius:6px;background:none;border:1px solid var(--bord);cursor:pointer;transition:all .15s;color:var(--tmut)}.btn-icon:hover{background:var(--cream);color:var(--tm)}
+.card{background:#fff;border-radius:10px;border:1px solid var(--bord)}
+.card-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.card-title{font-size:.9rem;font-weight:600;color:var(--tm)}
+.card-body{padding:1.5rem}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.sc{background:#fff;border-radius:10px;border:1px solid var(--bord);padding:1.25rem 1.5rem}
+.sl{font-size:.75rem;font-weight:500;color:var(--tmut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.sv{font-size:1.75rem;font-weight:600;color:var(--tm);line-height:1}
+.ss{font-size:.75rem;color:var(--tmut);margin-top:.35rem}
+.sc.gold{border-left:4px solid var(--gold)}.sc.navy{border-left:4px solid var(--navy)}.sc.suc{border-left:4px solid var(--suc)}.sc.warn{border-left:4px solid #e6a800}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{background:var(--cream);padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:600;color:var(--tmut);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bord);white-space:nowrap}
+tbody td{padding:.75rem 1rem;border-bottom:1px solid var(--bord);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--cream)}
+.pn{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--navy);font-weight:500}
+.badge{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600}
+.bs{background:var(--suc-bg);color:var(--suc)}.bw{background:var(--warn-bg);color:var(--warn)}.bd{background:var(--dan-bg);color:var(--dan)}.bi{background:var(--inf-bg);color:var(--inf)}.bg{background:#f0f0f0;color:#555}
+.fg{display:grid;gap:1rem}.fg2{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr 1fr}
+.fgr{display:flex;flex-direction:column;gap:.4rem}.fgr.full{grid-column:1/-1}
+label{font-size:.8rem;font-weight:500;color:var(--tmut)}
+input,select,textarea{padding:.55rem .75rem;border:1px solid var(--bord-d);border-radius:6px;font-size:.875rem;font-family:inherit;background:#fff;color:var(--tm);transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,27,45,.08)}
+textarea{resize:vertical;min-height:80px}
+.fh{font-size:.72rem;color:var(--tlt)}
+.fst{font-size:.8rem;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.08em;padding-bottom:.5rem;border-bottom:1px solid var(--bord);margin:.5rem 0;grid-column:1/-1}
+.fb{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap}
+.fb .fgr{margin:0;min-width:160px}
+.mo{display:none;position:fixed;inset:0;background:rgba(10,20,40,.55);z-index:1000;align-items:center;justify-content:center;padding:2rem}
+.mo.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.msm{max-width:480px}.mmd{max-width:700px}.mlg{max-width:960px}
+.mhd{padding:1.25rem 1.5rem;border-bottom:1px solid var(--bord);display:flex;align-items:center;justify-content:space-between;background:var(--navy);border-radius:12px 12px 0 0}
+.mhd h2{font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff}
+.mclose{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:1.25rem;line-height:1;padding:.25rem}.mclose:hover{color:#fff}
+.mbody{padding:1.5rem}.mfoot{padding:1rem 1.5rem;border-top:1px solid var(--bord);display:flex;gap:.75rem;justify-content:flex-end}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--bord);margin-bottom:1.5rem}
+.tab-btn{padding:.65rem 1.25rem;background:none;border:none;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--tmut);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}.tab-btn:hover:not(.active){color:var(--tm)}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.cc{background:#fff;border-radius:10px;border:1px solid var(--bord);padding:1.25rem}
+.ct{font-size:.85rem;font-weight:600;color:var(--tm);margin-bottom:1rem}
+.es{text-align:center;padding:3rem;color:var(--tmut)}
+.esi{font-size:2.5rem;margin-bottom:.75rem;opacity:.4}
+.es h3{font-size:1rem;font-weight:600;color:var(--tm);margin-bottom:.4rem}
+.es p{font-size:.85rem}
+.lc{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .6rem;background:var(--inf-bg);color:var(--inf);border-radius:4px;font-size:.75rem;font-family:'IBM Plex Mono',monospace;cursor:pointer}
+.lc:hover{background:#d5e6fb}.lc .rem{margin-left:.25rem;cursor:pointer;font-size:.85rem;opacity:.6}.lc .rem:hover{opacity:1}
+.tr4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.srd{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bord-d);border-radius:6px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.1);max-height:200px;overflow-y:auto}
+.sri{padding:.5rem .75rem;cursor:pointer;font-size:.82rem;border-bottom:1px solid var(--bord)}.sri:last-child{border-bottom:none}.sri:hover{background:var(--cream)}
+.rel{position:relative}
+.pt{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--navy);margin-bottom:.25rem}
+.ps{font-size:.85rem;color:var(--tmut);margin-bottom:1.5rem}
+.div{border:none;border-top:1px solid var(--bord);margin:1rem 0}
+.cur{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.hidden{display:none!important}
+.fw6{font-weight:600}.fm{font-family:'IBM Plex Mono',monospace}.tg{color:var(--gold)}.tn{color:var(--navy)}.tr{text-align:right}
+.mb1{margin-bottom:.5rem}.mb2{margin-bottom:1rem}.mb3{margin-bottom:1.5rem}
+.ts{font-size:.82rem}.tmut{color:var(--tmut)}
+
+/* SYNC */
+.syncp{display:flex;align-items:center;gap:.5rem;font-size:.75rem;padding:.35rem .75rem;border-radius:20px;transition:all .3s}
+.syncp.idle{color:var(--suc);background:var(--suc-bg)}.syncp.saving{color:var(--warn);background:var(--warn-bg)}.syncp.error{color:var(--dan);background:var(--dan-bg)}
+.sdot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.sdot.pulse{animation:pulse .8s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cfgbox{background:#fff;border-radius:16px;padding:2.5rem;max-width:560px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.cfgt{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--navy);margin-bottom:.5rem}
+.cfgs{font-size:.9rem;color:var(--tmut);margin-bottom:1.5rem;line-height:1.6}
+.cstep{display:flex;gap:1rem;margin-bottom:.9rem;align-items:flex-start}
+.csn{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0;margin-top:2px}
+.cst{font-size:.85rem;color:var(--tmut);line-height:1.5}
+.cir{display:flex;gap:.75rem;margin-top:1.5rem}
+.cir input{flex:1}
+.cerr{font-size:.8rem;color:var(--dan);margin-top:.5rem}
+.lov{position:fixed;inset:0;background:rgba(15,27,45,.7);z-index:8888;display:flex;align-items:center;justify-content:center}
+.lsp{width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RELATÓRIOS AVANÇADOS */
+.rpt-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.rpt-tab{padding:.5rem 1.1rem;border-radius:6px;border:1px solid var(--bord-d);font-size:.82rem;font-weight:500;cursor:pointer;background:#fff;color:var(--tmut);transition:all .15s;font-family:inherit}
+.rpt-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rpt-section{display:none}.rpt-section.active{display:block}
+.report-toolbar{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
+.report-toolbar .fgr{min-width:140px;margin:0}
+.report-actions{margin-left:auto;display:flex;gap:.5rem}
+.total-highlight{background:var(--navy);color:#fff;border-radius:8px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.th-label{font-size:.8rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em}
+.th-value{font-size:1.5rem;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold-light)}
+
+/* PRINT / PDF */
+@media print {
+  body{background:#fff!important;font-size:11pt}
+  .sidebar,.topbar,.report-toolbar,.report-actions,.btn,.rpt-tabs,#page-dashboard,#page-processos,#page-julgadores,.no-print{display:none!important}
+  .main{margin-left:0!important}
+  .content{padding:.5rem!important}
+  .rpt-section{display:block!important}
+  .card{border:1px solid #ccc!important;break-inside:avoid;margin-bottom:1rem}
+  .card-header{background:#0f1b2d!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .total-highlight{background:#0f1b2d!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-header{display:block!important}
+  thead th{background:#0f1b2d!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .badge{border:1px solid #ccc}
+  table{font-size:9pt}
+  .tr4{grid-template-columns:repeat(4,1fr)!important}
+}
+.print-header{display:none;text-align:center;padding:1rem 0;border-bottom:2px solid #0f1b2d;margin-bottom:1.5rem}
+.print-header h1{font-family:Georgia,serif;font-size:16pt;color:#0f1b2d}
+.print-header p{font-size:10pt;color:#555;margin-top:4px}
+
+@media(max-width:900px){.fg2,.fg3{grid-template-columns:1fr}.cg{grid-template-columns:1fr}.tr4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div id="cfg-screen" style="display:none;position:fixed;inset:0;background:var(--navy);z-index:9999;align-items:center;justify-content:center">
+<div class="cfgbox">
+  <div class="cfgt">Configuração do Banco de Dados</div>
+  <div class="cfgs">Cole abaixo a URL do seu <strong>Google Apps Script</strong> para conectar o portal ao banco de dados.</div>
+  <div class="cstep"><div class="csn">1</div><div class="cst">Abra sua Planilha Google → <strong>Extensions → Apps Script</strong></div></div>
+  <div class="cstep"><div class="csn">2</div><div class="cst">Cole o conteúdo do <strong>apps_script_v2.gs</strong> e salve</div></div>
+  <div class="cstep"><div class="csn">3</div><div class="cst"><strong>Deploy → New deployment → Web app</strong><br>Execute as: <em>Me</em> · Who has access: <em>Anyone</em> → Deploy</div></div>
+  <div class="cstep"><div class="csn">4</div><div class="cst">Copie a <strong>URL gerada</strong> (começa com https://script.google.com/macros/s/…/exec) e cole abaixo</div></div>
+  <div class="cir">
+    <input type="url" id="surl" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:.8rem">
+    <button class="btn btn-gold" onclick="salvarCfg()" style="white-space:nowrap">Conectar</button>
+  </div>
+  <div class="cerr hidden" id="cfg-err"></div>
+  <div id="cfg-testing" class="hidden" style="margin-top:.75rem;font-size:.82rem;color:var(--tmut)">⏳ Testando conexão…</div>
+</div>
+</div>
+
+<!-- LOADING -->
+<div class="lov hidden" id="lov"><div class="lsp"></div></div>
+
+<div id="app">
+<aside class="sidebar">
+  <div class="sbrand"><div class="sbrand-t">PROCON Maceió</div><div class="sbrand-s">Sistema de Gestão de PAS</div></div>
+  <nav class="snav">
+    <div class="snav-lbl">Principal</div>
+    <div class="ni active" onclick="nav('dashboard')"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="snav-lbl">Gestão</div>
+    <div class="ni" onclick="nav('processos')"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Processos</div>
+    <div class="ni" onclick="nav('julgadores')"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Julgadores</div>
+    <div class="snav-lbl">Relatórios</div>
+    <div class="ni" onclick="nav('relatorios')"><svg class="nic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Relatórios</div>
+  </nav>
+  <div class="sfooter" style="display:flex;flex-direction:column;gap:6px">
+    <div id="sync-ind" class="syncp idle"><span class="sdot"></span><span id="sync-txt">Sincronizado</span></div>
+    <div style="cursor:pointer;color:rgba(255,255,255,.3);font-size:.65rem" onclick="recfg()">⚙ Reconfigurar API</div>
+    <div>v3.0 · PROCON Maceió</div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" id="tt">Dashboard</div><div class="topbar-bc" id="tbc">Visão geral</div></div>
+    <div class="topbar-act">
+      <button class="btn btn-gold" id="btn-np" onclick="openNewProc()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Processo
+      </button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <p class="pt">Painel de Controle</p><p class="ps">Estatísticas e indicadores dos processos administrativos sancionatórios</p>
+      <div class="sg" id="dash-stats"></div>
+      <div class="cg">
+        <div class="cc"><div class="ct">Processos por Mês</div><div style="position:relative;height:220px"><canvas id="ch-mensal"></canvas></div></div>
+        <div class="cc"><div class="ct">Distribuição por Status</div><div style="position:relative;height:220px"><canvas id="ch-status"></canvas></div></div>
+        <div class="cc"><div class="ct">Multas por Julgador</div><div style="position:relative;height:220px"><canvas id="ch-julg"></canvas></div></div>
+        <div class="cc"><div class="ct">Arrecadação Mensal (R$)</div><div style="position:relative;height:220px"><canvas id="ch-arrec"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Últimos Processos</span><button class="btn btn-outline btn-sm" onclick="nav('processos')">Ver todos →</button></div>
+        <div class="card-body" style="padding:0"><div class="tw"><table><thead><tr><th>Nº Processo</th><th>Fornecedor</th><th>Consumidor</th><th>Julgador</th><th>Status</th><th>Multa (R$)</th></tr></thead><tbody id="dash-tb"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- PROCESSOS -->
+    <div id="page-processos" class="hidden">
+      <p class="pt">Processos Administrativos</p><p class="ps">Cadastro e gestão dos processos sancionatórios — todas as instâncias</p>
+      <div class="fb">
+        <div class="fgr"><label>Buscar</label><input type="text" id="f-s" placeholder="Nº, fornecedor, consumidor…" oninput="renderProcs()"></div>
+        <div class="fgr"><label>Julgador</label><select id="f-j" onchange="renderProcs()"><option value="">Todos</option></select></div>
+        <div class="fgr"><label>Fornecedor</label><input type="text" id="f-f" placeholder="Nome do fornecedor" oninput="renderProcs()"></div>
+        <div class="fgr"><label>Instância</label><select id="f-i" onchange="renderProcs()"><option value="">Todas</option><option value="primeira">1ª Instância</option><option value="segunda">2ª Instância</option></select></div>
+        <div class="fgr"><label>Status</label><select id="f-st" onchange="renderProcs()"><option value="">Todos</option><option value="em_andamento">Em Andamento</option><option value="julgado">Julgado</option><option value="recurso">Com Recurso</option><option value="arquivado">Arquivado</option></select></div>
+        <div class="fgr"><label>Resultado</label><select id="f-r" onchange="renderProcs()"><option value="">Todos</option><option value="procedente">Procedente</option><option value="improcedente">Improcedente</option><option value="parcialmente_procedente">Parc. Procedente</option></select></div>
+        <div class="fgr"><label>Data início</label><input type="date" id="f-di" onchange="renderProcs()"></div>
+        <div class="fgr"><label>Data fim</label><input type="date" id="f-df" onchange="renderProcs()"></div>
+        <div class="fgr" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn btn-outline btn-sm" onclick="clearF()">Limpar</button></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" id="pc">Processos</span><button class="btn btn-primary btn-sm" onclick="openNewProc()">+ Novo Processo</button></div>
+        <div class="card-body" style="padding:0"><div class="tw"><table><thead><tr><th>Nº Processo</th><th>Fornecedor</th><th>Consumidor</th><th>Julgador</th><th>Instância</th><th>Status</th><th>Resultado</th><th class="tr">Multa (R$)</th><th>Data Julg.</th><th>Ações</th></tr></thead><tbody id="proc-tb"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- JULGADORES -->
+    <div id="page-julgadores" class="hidden">
+      <p class="pt">Julgadores</p><p class="ps">Cadastro e estatísticas de desempenho</p>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Julgadores Cadastrados</span><button class="btn btn-primary btn-sm" onclick="openNewJulg()">+ Novo Julgador</button></div>
+        <div class="card-body" style="padding:0"><div class="tw"><table><thead><tr><th>Nome</th><th>Cargo</th><th>Status</th><th>Processos</th><th>Julgados</th><th>Multas Aplicadas</th><th>Eficiência</th><th>Ações</th></tr></thead><tbody id="julg-tb"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div id="page-relatorios" class="hidden">
+      <p class="pt">Relatórios</p><p class="ps">Relatórios detalhados com exportação em PDF e CSV</p>
+      <div class="rpt-tabs">
+        <button class="rpt-tab active" onclick="switchRpt('mensal')">📅 Mensal</button>
+        <button class="rpt-tab" onclick="switchRpt('julgador')">👤 Por Julgador</button>
+        <button class="rpt-tab" onclick="switchRpt('fornecedor')">🏢 Por Fornecedor</button>
+        <button class="rpt-tab" onclick="switchRpt('periodo')">📆 Por Período</button>
+        <button class="rpt-tab" onclick="switchRpt('processo')">📋 Processo Individual</button>
+      </div>
+
+      <!-- MENSAL -->
+      <div id="rpt-mensal" class="rpt-section active">
+        <div class="report-toolbar">
+          <div class="fgr"><label>Ano</label><select id="r-ano" onchange="renderMensal()"></select></div>
+          <div class="fgr"><label>Julgador</label><select id="r-j" onchange="renderMensal()"><option value="">Todos</option></select></div>
+          <div class="fgr"><label>Resultado</label><select id="r-res" onchange="renderMensal()"><option value="">Todos</option><option value="procedente">Procedente</option><option value="improcedente">Improcedente</option><option value="parcialmente_procedente">Parc. Procedente</option></select></div>
+          <div class="report-actions no-print">
+            <button class="btn btn-pdf btn-sm" onclick="printRpt('mensal')">⬇ PDF</button>
+            <button class="btn btn-csv btn-sm" onclick="csvMensal()">⬇ CSV</button>
+          </div>
+        </div>
+        <div id="rpt-mensal-body"></div>
+      </div>
+
+      <!-- POR JULGADOR -->
+      <div id="rpt-julgador" class="rpt-section">
+        <div class="report-toolbar">
+          <div class="fgr"><label>Julgador</label><select id="rj-j" onchange="renderPorJulg()"><option value="">Todos</option></select></div>
+          <div class="fgr"><label>Ano</label><select id="rj-ano" onchange="renderPorJulg()"></select></div>
+          <div class="report-actions no-print">
+            <button class="btn btn-pdf btn-sm" onclick="printRpt('julgador')">⬇ PDF</button>
+            <button class="btn btn-csv btn-sm" onclick="csvPorJulg()">⬇ CSV</button>
+          </div>
+        </div>
+        <div id="rpt-julg-body"></div>
+      </div>
+
+      <!-- POR FORNECEDOR -->
+      <div id="rpt-fornecedor" class="rpt-section">
+        <div class="report-toolbar">
+          <div class="fgr"><label>Fornecedor</label><input type="text" id="rf-f" placeholder="Nome do fornecedor" oninput="renderPorForn()"></div>
+          <div class="fgr"><label>Ano</label><select id="rf-ano" onchange="renderPorForn()"><option value="">Todos os anos</option></select></div>
+          <div class="report-actions no-print">
+            <button class="btn btn-pdf btn-sm" onclick="printRpt('fornecedor')">⬇ PDF</button>
+            <button class="btn btn-csv btn-sm" onclick="csvPorForn()">⬇ CSV</button>
+          </div>
+        </div>
+        <div id="rpt-forn-body"></div>
+      </div>
+
+      <!-- POR PERÍODO -->
+      <div id="rpt-periodo" class="rpt-section">
+        <div class="report-toolbar">
+          <div class="fgr"><label>Data Início</label><input type="date" id="rp-di" onchange="renderPorPeriodo()"></div>
+          <div class="fgr"><label>Data Fim</label><input type="date" id="rp-df" onchange="renderPorPeriodo()"></div>
+          <div class="fgr"><label>Julgador</label><select id="rp-j" onchange="renderPorPeriodo()"><option value="">Todos</option></select></div>
+          <div class="fgr"><label>Status</label><select id="rp-st" onchange="renderPorPeriodo()"><option value="">Todos</option><option value="em_andamento">Em Andamento</option><option value="julgado">Julgado</option><option value="recurso">Com Recurso</option><option value="arquivado">Arquivado</option></select></div>
+          <div class="report-actions no-print">
+            <button class="btn btn-pdf btn-sm" onclick="printRpt('periodo')">⬇ PDF</button>
+            <button class="btn btn-csv btn-sm" onclick="csvPorPeriodo()">⬇ CSV</button>
+          </div>
+        </div>
+        <div id="rpt-per-body"></div>
+      </div>
+
+      <!-- PROCESSO INDIVIDUAL -->
+      <div id="rpt-processo" class="rpt-section">
+        <div class="report-toolbar">
+          <div class="fgr" style="min-width:300px"><label>Buscar Processo</label>
+            <div class="rel">
+              <input type="text" id="rpi-s" placeholder="Nº do processo ou fornecedor…" oninput="searchProcRpt()" autocomplete="off">
+              <div class="srd hidden" id="rpi-drop"></div>
+            </div>
+          </div>
+          <div class="report-actions no-print">
+            <button class="btn btn-pdf btn-sm" onclick="printRpt('processo')">⬇ PDF</button>
+          </div>
+        </div>
+        <div id="rpt-proc-body"></div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- MODAL PROCESSO -->
+<div class="mo" id="mo-proc">
+<div class="modal mlg">
+  <div class="mhd"><h2 id="mo-proc-t">Novo Processo</h2><button class="mclose" onclick="closeM('mo-proc')">✕</button></div>
+  <div class="mbody">
+    <input type="hidden" id="pi">
+    <div class="tabs" id="ptabs">
+      <button class="tab-btn active" onclick="swTab('td')">Dados Gerais</button>
+      <button class="tab-btn" onclick="swTab('t1')">1ª Instância</button>
+      <button class="tab-btn" onclick="swTab('tr')">Recurso / 2ª Inst.</button>
+      <button class="tab-btn" onclick="swTab('tv')">Vínculos</button>
+    </div>
+    <div id="td">
+      <div class="fg fg2">
+        <div class="fst">Identificação</div>
+        <div class="fgr"><label>Nº do Processo *</label><input type="text" id="p-num" placeholder="21.09.0003.002.00012-301"><div class="fh">Formato: AA.MM.CCCC.SEQ.NNNNN-IND</div></div>
+        <div class="fgr"><label>Data de Autuação *</label><input type="date" id="p-daut"></div>
+        <div class="fgr"><label>Assunto / Infração *</label><input type="text" id="p-ass" placeholder="ex: Vantagem Manifestamente Excessiva"></div>
+        <div class="fgr"><label>Origem</label><select id="p-orig"><option value="reclamacao">Reclamação</option><option value="cip">CIP</option><option value="auto_infracao">Auto de Infração</option><option value="oficio">De Ofício</option></select></div>
+        <div class="fst">Fornecedor (Reclamado)</div>
+        <div class="fgr"><label>Razão Social / Nome *</label><input type="text" id="p-forn" placeholder="Nome ou Razão Social"></div>
+        <div class="fgr"><label>CNPJ / CPF</label><input type="text" id="p-cnpj" placeholder="00.000.000/0001-00"></div>
+        <div class="fgr full"><label>Endereço</label><input type="text" id="p-endf" placeholder="Rua, número, bairro, CEP"></div>
+        <div class="fst">Consumidor (Reclamante)</div>
+        <div class="fgr"><label>Nome do Consumidor *</label><input type="text" id="p-cons" placeholder="Nome completo"></div>
+        <div class="fgr"><label>CPF / RG</label><input type="text" id="p-cpfc" placeholder="000.000.000-00"></div>
+        <div class="fgr full"><label>Observações</label><textarea id="p-obs" placeholder="Notas adicionais…"></textarea></div>
+      </div>
+    </div>
+    <div id="t1" class="hidden">
+      <div class="fg fg2">
+        <div class="fst">Julgamento de 1ª Instância</div>
+        <div class="fgr"><label>Julgador Responsável</label><select id="p-julg"></select></div>
+        <div class="fgr"><label>Data do Julgamento</label><input type="date" id="p-djulg"></div>
+        <div class="fgr"><label>Status</label><select id="p-st"><option value="em_andamento">Em Andamento</option><option value="julgado">Julgado</option><option value="recurso">Com Recurso</option><option value="arquivado">Arquivado</option></select></div>
+        <div class="fgr"><label>Resultado</label><select id="p-res"><option value="">— Pendente —</option><option value="procedente">Procedente</option><option value="improcedente">Improcedente</option><option value="parcialmente_procedente">Parcialmente Procedente</option></select></div>
+        <div class="fgr"><label>Gravidade</label><select id="p-grav"><option value="">—</option><option value="leve">Leve</option><option value="grave">Grave</option><option value="gravissima">Gravíssima</option></select></div>
+        <div class="fgr"><label>Valor da Multa (R$)</label><input type="number" id="p-multa" placeholder="0,00" step="0.01" min="0"></div>
+        <div class="fgr full"><label>Fundamentação / Dispositivo</label><textarea id="p-fund" style="min-height:100px"></textarea></div>
+        <div class="fgr full"><label>Circunstâncias Atenuantes</label><textarea id="p-aten"></textarea></div>
+        <div class="fgr full"><label>Circunstâncias Agravantes</label><textarea id="p-agra"></textarea></div>
+      </div>
+    </div>
+    <div id="tr" class="hidden">
+      <div class="fg fg2">
+        <div class="fst">Recurso / 2ª Instância</div>
+        <div class="fgr"><label>Recurso Interposto?</label><select id="p-trec" onchange="togRec()"><option value="nao">Não</option><option value="sim">Sim</option></select></div>
+        <div class="fgr"><label>Data do Recurso</label><input type="date" id="p-drec" disabled></div>
+        <div class="fgr"><label>Quem Interpôs</label><select id="p-recor" disabled><option value="">—</option><option value="fornecedor">Fornecedor</option><option value="consumidor">Consumidor</option><option value="procon">PROCON (de ofício)</option></select></div>
+        <div class="fgr"><label>Julgador de 2ª Instância</label><select id="p-julg2" disabled><option value="">—</option></select></div>
+        <div class="fgr"><label>Data Julg. (Recurso)</label><input type="date" id="p-djrec" disabled></div>
+        <div class="fgr"><label>Resultado do Recurso</label><select id="p-rrec" disabled><option value="">— Pendente —</option><option value="provido">Provido</option><option value="improvido">Improvido</option><option value="parcialmente_provido">Parcialmente Provido</option></select></div>
+        <div class="fgr"><label>Valor Final Após Recurso (R$)</label><input type="number" id="p-mrec" placeholder="0,00" step="0.01" disabled></div>
+        <div class="fgr full"><label>Decisão do Recurso</label><textarea id="p-drec2" disabled></textarea></div>
+      </div>
+    </div>
+    <div id="tv" class="hidden">
+      <p class="ts tmut mb1">Vincule processos do mesmo fornecedor ou fatos idênticos para tratamento coletivo.</p>
+      <div class="rel">
+        <input type="text" id="vsearch" placeholder="Buscar por número ou fornecedor…" oninput="searchVinc()" autocomplete="off">
+        <div class="srd hidden" id="vdrop"></div>
+      </div>
+      <div id="vlist" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem"></div>
+      <input type="hidden" id="p-vinc" value="[]">
+    </div>
+  </div>
+  <div class="mfoot"><button class="btn btn-outline" onclick="closeM('mo-proc')">Cancelar</button><button class="btn btn-primary" onclick="saveProc()">Salvar Processo</button></div>
+</div>
+</div>
+
+<!-- MODAL JULGADOR -->
+<div class="mo" id="mo-julg">
+<div class="modal msm">
+  <div class="mhd"><h2 id="mo-julg-t">Novo Julgador</h2><button class="mclose" onclick="closeM('mo-julg')">✕</button></div>
+  <div class="mbody">
+    <input type="hidden" id="ji">
+    <div class="fg">
+      <div class="fgr"><label>Nome Completo *</label><input type="text" id="j-nome"></div>
+      <div class="fgr"><label>Cargo / Função *</label><input type="text" id="j-cargo" placeholder="ex: Julgador Titular"></div>
+      <div class="fgr"><label>Matrícula</label><input type="text" id="j-mat"></div>
+      <div class="fgr"><label>Status</label><select id="j-st"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div>
+    </div>
+  </div>
+  <div class="mfoot"><button class="btn btn-outline" onclick="closeM('mo-julg')">Cancelar</button><button class="btn btn-primary" onclick="saveJulg()">Salvar</button></div>
+</div>
+</div>
+
+<!-- MODAL VER PROCESSO -->
+<div class="mo" id="mo-ver">
+<div class="modal mlg">
+  <div class="mhd"><h2 id="ver-t">Processo</h2><button class="mclose" onclick="closeM('mo-ver')">✕</button></div>
+  <div class="mbody" id="ver-body"></div>
+  <div class="mfoot"><button class="btn btn-outline" onclick="closeM('mo-ver')">Fechar</button><button class="btn btn-primary" id="ver-edit">Editar</button></div>
+</div>
+</div>
+
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+const CK='procon_url_v3';
+let URL_API=localStorage.getItem(CK)||'';
+let db={julgadores:[],processos:[]};
+let curPage='dashboard',curVinc=[],charts={},syncTO=null,curRpt='mensal';
+
+function setSt(s,t){const i=document.getElementById('sync-ind'),d=i.querySelector('.sdot');i.className='syncp '+s;d.className='sdot'+(s==='saving'?' pulse':'');document.getElementById('sync-txt').textContent=t}
+function showLov(v){document.getElementById('lov').classList.toggle('hidden',!v)}
+
+async function carregar(){
+  try{showLov(true);setSt('saving','Carregando…');
+  const r=await fetch(URL_API+'?t='+Date.now());
+  const j=await r.json();
+  if(j.ok){db=j.data||{julgadores:[],processos:[]};db.julgadores=db.julgadores||[];db.processos=db.processos||[];setSt('idle','Sincronizado');}
+  else setSt('error','Erro ao carregar');
+  }catch(e){setSt('error','Sem conexão')}finally{showLov(false)}
+}
+
+async function salvar(){
+  setSt('saving','Salvando…');
+  try{
+    // Usa fetch sem Content-Type para evitar preflight CORS
+    const r=await fetch(URL_API,{method:'POST',body:JSON.stringify(db)});
+    const j=await r.json();
+    if(j.ok){setSt('idle','Salvo às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));}
+    else setSt('error','Erro ao salvar');
+  }catch(e){
+    // Fallback: tenta via GET com dados como parâmetro (para CORS mais restritivo)
+    try{
+      const enc=encodeURIComponent(JSON.stringify(db));
+      await fetch(URL_API+'?action=save&d='+enc.slice(0,1900));
+      setSt('idle','Salvo (fallback)');
+    }catch(e2){setSt('error','Falha no save')}
+  }
+}
+
+function agSave(){clearTimeout(syncTO);syncTO=setTimeout(()=>salvar(),1000)}
+
+function salvarCfg(){
+  const url=document.getElementById('surl').value.trim();
+  const err=document.getElementById('cfg-err');
+  if(!url||!url.includes('script.google.com')){err.classList.remove('hidden');err.textContent='URL inválida. Deve ser a URL do Apps Script (script.google.com/macros/s/…/exec)';return}
+  err.classList.add('hidden');
+  document.getElementById('cfg-testing').classList.remove('hidden');
+  fetch(url+'?t='+Date.now()).then(r=>r.json()).then(j=>{
+    if(j.ok){localStorage.setItem(CK,url);URL_API=url;document.getElementById('cfg-screen').style.display='none';iniciar();}
+    else{err.classList.remove('hidden');err.textContent='Conexão OK mas retornou erro: '+JSON.stringify(j);document.getElementById('cfg-testing').classList.add('hidden');}
+  }).catch(e=>{
+    // CORS pode bloquear mesmo URL correta — tenta salvar assim mesmo
+    localStorage.setItem(CK,url);URL_API=url;
+    document.getElementById('cfg-screen').style.display='none';
+    iniciar();
+  });
+}
+
+function recfg(){document.getElementById('surl').value=URL_API;document.getElementById('cfg-screen').style.display='flex'}
+
+async function iniciar(){await carregar();renderDash()}
+
+if(URL_API){document.getElementById('cfg-screen').style.display='none';iniciar();}
+else{document.getElementById('cfg-screen').style.display='flex'}
+
+// ================================================================
+// NAV
+// ================================================================
+function nav(p){
+  curPage=p;
+  document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
+  [{d:'dashboard',i:0},{d:'processos',i:1},{d:'julgadores',i:2},{d:'relatorios',i:3}].forEach(x=>{if(x.d===p)document.querySelectorAll('.ni')[x.i]?.classList.add('active')});
+  ['dashboard','processos','julgadores','relatorios'].forEach(x=>document.getElementById('page-'+x).classList.add('hidden'));
+  document.getElementById('page-'+p).classList.remove('hidden');
+  const T={dashboard:['Dashboard','Visão geral'],processos:['Processos Administrativos','Gestão de PAS'],julgadores:['Julgadores','Cadastro e desempenho'],relatorios:['Relatórios','Exportação PDF e CSV']};
+  document.getElementById('tt').textContent=T[p][0];document.getElementById('tbc').textContent=T[p][1];
+  if(p==='dashboard')renderDash();
+  if(p==='processos'){popF();renderProcs();}
+  if(p==='julgadores')renderJulg();
+  if(p==='relatorios'){popRptFilters();renderMensal();}
+}
+
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.mo').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)e.classList.remove('open')}));
+function swTab(t){['td','t1','tr','tv'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(t).classList.remove('hidden');document.querySelectorAll('#ptabs .tab-btn').forEach((b,i)=>b.classList.toggle('active',['td','t1','tr','tv'][i]===t))}
+
+// ================================================================
+// FMT
+// ================================================================
+function fBRL(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fDate(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function gJ(id){const j=db.julgadores.find(j=>j.id===id);return j?j.nome:'—'}
+function gM(p){return(p.tem_recurso==='sim'&&p.multa_rec)?p.multa_rec:(p.multa||0)}
+function stB(s){const m={em_andamento:['bw','Em Andamento'],julgado:['bs','Julgado'],recurso:['bi','Com Recurso'],arquivado:['bg','Arquivado']};const[c,l]=m[s]||['bg',s];return`<span class="badge ${c}">${l}</span>`}
+function resB(r){const m={procedente:['bd','Procedente'],improcedente:['bs','Improcedente'],parcialmente_procedente:['bw','Parc. Procedente']};if(!r)return'<span class="badge bg">Pendente</span>';const[c,l]=m[r]||['bg',r];return`<span class="badge ${c}">${l}</span>`}
+function instB(p){return p.tem_recurso==='sim'?'<span class="badge bi">2ª Instância</span>':'<span class="badge bg">1ª Instância</span>'}
+
+// ================================================================
+// DASHBOARD
+// ================================================================
+function dC(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+function getLM(){const m=[];const d=new Date();for(let i=5;i>=0;i--){const t=new Date(d.getFullYear(),d.getMonth()-i,1);m.push(`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`)}return m}
+function mN(m){return['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)]}
+
+function renderDash(){
+  const tot=db.processos.length,julg=db.processos.filter(p=>p.status==='julgado'||p.status==='recurso').length;
+  const tM=db.processos.reduce((a,p)=>a+gM(p),0),em=db.processos.filter(p=>p.status==='em_andamento').length;
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="sc gold"><div class="sl">Total de Processos</div><div class="sv">${tot}</div><div class="ss">${em} em andamento</div></div>
+    <div class="sc navy"><div class="sl">Processos Julgados</div><div class="sv">${julg}</div><div class="ss">Eficiência: ${tot?Math.round(julg/tot*100):0}%</div></div>
+    <div class="sc suc"><div class="sl">Total de Multas</div><div class="sv" style="font-size:1.3rem">${fBRL(tM)}</div><div class="ss">Soma geral aplicada</div></div>
+    <div class="sc warn"><div class="sl">Julgadores Ativos</div><div class="sv">${db.julgadores.filter(j=>j.status==='ativo').length}</div><div class="ss">${db.julgadores.length} cadastrados</div></div>
+  `;
+  const tb=document.getElementById('dash-tb');
+  const rec=[...db.processos].reverse().slice(0,6);
+  tb.innerHTML=rec.length?rec.map(p=>`<tr onclick="verProc('${p.id}')" style="cursor:pointer"><td class="pn">${p.numero}</td><td>${p.fornecedor}</td><td>${p.consumidor}</td><td class="ts">${gJ(p.julgador_id).replace(/^Dr[a]?\. /,'')}</td><td>${stB(p.status)}</td><td class="cur tr">${gM(p)?fBRL(gM(p)):'—'}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--tmut)">Nenhum processo cadastrado.</td></tr>';
+  setTimeout(()=>{
+    const lm=getLM();
+    dC('ch-mensal');charts['ch-mensal']=new Chart(document.getElementById('ch-mensal'),{type:'bar',data:{labels:lm.map(m=>{const[y,mo]=m.split('-');return mN(mo)+'/'+y.slice(2)}),datasets:[{label:'Processos',data:lm.map(m=>db.processos.filter(p=>p.data_aut&&p.data_aut.startsWith(m)).length),backgroundColor:'#1a2f4e',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+    const sc=['em_andamento','julgado','recurso','arquivado'].map(s=>db.processos.filter(p=>p.status===s).length);
+    dC('ch-status');charts['ch-status']=new Chart(document.getElementById('ch-status'),{type:'doughnut',data:{labels:['Em Andamento','Julgado','Com Recurso','Arquivado'],datasets:[{data:sc,backgroundColor:['#e6a800','#1a7a4a','#1a4a9a','#888'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+    dC('ch-julg');charts['ch-julg']=new Chart(document.getElementById('ch-julg'),{type:'bar',data:{labels:db.julgadores.map(j=>j.nome.split(' ').slice(-1)[0]),datasets:[{label:'Multas (R$)',data:db.julgadores.map(j=>db.processos.filter(p=>p.julgador_id===j.id).reduce((a,p)=>a+gM(p),0)),backgroundColor:'#c9a84c',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR')}}}}});
+    dC('ch-arrec');charts['ch-arrec']=new Chart(document.getElementById('ch-arrec'),{type:'line',data:{labels:lm.map(m=>{const[y,mo]=m.split('-');return mN(mo)+'/'+y.slice(2)}),datasets:[{label:'Arrecadado',data:lm.map(m=>db.processos.filter(p=>p.data_julg&&p.data_julg.startsWith(m)&&(p.status==='julgado'||p.status==='recurso')).reduce((a,p)=>a+gM(p),0)),borderColor:'#0f1b2d',backgroundColor:'rgba(15,27,45,.07)',tension:.3,fill:true,pointBackgroundColor:'#c9a84c',pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'R$'+v.toLocaleString('pt-BR')}}}}});
+  },100);
+}
+
+// ================================================================
+// PROCESSOS
+// ================================================================
+function popF(){const s=document.getElementById('f-j');s.innerHTML='<option value="">Todos</option>'+db.julgadores.map(j=>`<option value="${j.id}">${j.nome}</option>`).join('')}
+function clearF(){['f-s','f-f','f-di','f-df'].forEach(id=>document.getElementById(id).value='');['f-j','f-i','f-st','f-r'].forEach(id=>document.getElementById(id).value='');renderProcs()}
+
+function renderProcs(){
+  const s=(document.getElementById('f-s')?.value||'').toLowerCase();
+  const ff=(document.getElementById('f-f')?.value||'').toLowerCase();
+  const ji=document.getElementById('f-j')?.value||'';
+  const ins=document.getElementById('f-i')?.value||'';
+  const st=document.getElementById('f-st')?.value||'';
+  const re=document.getElementById('f-r')?.value||'';
+  const di=document.getElementById('f-di')?.value||'';
+  const df=document.getElementById('f-df')?.value||'';
+  let pp=db.processos.filter(p=>{
+    if(s&&!`${p.numero} ${p.fornecedor} ${p.consumidor} ${p.assunto}`.toLowerCase().includes(s))return false;
+    if(ff&&!p.fornecedor.toLowerCase().includes(ff))return false;
+    if(ji&&p.julgador_id!==ji)return false;
+    if(ins==='primeira'&&p.tem_recurso==='sim')return false;
+    if(ins==='segunda'&&p.tem_recurso!=='sim')return false;
+    if(st&&p.status!==st)return false;
+    if(re&&p.resultado!==re)return false;
+    if(di&&p.data_aut<di)return false;
+    if(df&&p.data_aut>df)return false;
+    return true;
+  });
+  document.getElementById('pc').textContent=`${pp.length} Processo${pp.length!==1?'s':''}`;
+  const tb=document.getElementById('proc-tb');
+  if(!pp.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><div class="esi">📋</div><h3>Nenhum processo encontrado</h3><p>Ajuste os filtros ou cadastre um novo processo.</p></div></td></tr>`;return}
+  tb.innerHTML=pp.map(p=>`<tr><td class="pn">${p.numero}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.fornecedor}</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.consumidor}</td><td class="ts">${gJ(p.julgador_id).replace(/^Dr[a]?\. /,'')}</td><td>${instB(p)}</td><td>${stB(p.status)}</td><td>${resB(p.resultado)}</td><td class="cur tr">${gM(p)?fBRL(gM(p)):'—'}</td><td class="ts">${fDate(p.data_julg)}</td><td><div style="display:flex;gap:.35rem"><button class="btn-icon" onclick="verProc('${p.id}')">👁</button><button class="btn-icon" onclick="editProc('${p.id}')">✏️</button><button class="btn-icon" onclick="delProc('${p.id}')">🗑</button></div></td></tr>`).join('');
+}
+
+function verProc(id){
+  const p=db.processos.find(x=>x.id===id);if(!p)return;
+  document.getElementById('ver-t').textContent=p.numero;
+  document.getElementById('ver-edit').onclick=()=>{closeM('mo-ver');editProc(id)};
+  const vincs=(p.vinculos||[]).map(vid=>{const vp=db.processos.find(x=>x.id===vid);return vp?`<span class="lc">${vp.numero}</span>`:''}).join(' ');
+  document.getElementById('ver-body').innerHTML=`
+    <div class="fg fg2" style="gap:.75rem">
+      <div><div class="sl">Nº do Processo</div><div class="pn" style="font-size:1rem">${p.numero}</div></div>
+      <div><div class="sl">Data de Autuação</div><div>${fDate(p.data_aut)}</div></div>
+      <div class="full"><div class="sl">Assunto</div><div>${p.assunto||'—'}</div></div>
+      <div><div class="sl">Fornecedor</div><div class="fw6">${p.fornecedor}</div></div>
+      <div><div class="sl">CNPJ/CPF</div><div class="fm">${p.cnpj||'—'}</div></div>
+      <div><div class="sl">Consumidor</div><div>${p.consumidor}</div></div>
+      <div><div class="sl">CPF/RG</div><div class="fm">${p.cpfc||'—'}</div></div>
+    </div><hr class="div">
+    <div class="fg fg2" style="gap:.75rem">
+      <div><div class="sl">Julgador (1ª Inst.)</div><div>${gJ(p.julgador_id)}</div></div>
+      <div><div class="sl">Data do Julgamento</div><div>${fDate(p.data_julg)}</div></div>
+      <div><div class="sl">Status</div><div>${stB(p.status)}</div></div>
+      <div><div class="sl">Resultado</div><div>${resB(p.resultado)}</div></div>
+      <div><div class="sl">Gravidade</div><div>${p.gravidade||'—'}</div></div>
+      <div><div class="sl">Multa (1ª Inst.)</div><div class="cur fw6 tg">${p.multa?fBRL(p.multa):'—'}</div></div>
+      ${p.fundamentacao?`<div class="full"><div class="sl">Fundamentação</div><div class="ts">${p.fundamentacao}</div></div>`:''}
+    </div>
+    ${p.tem_recurso==='sim'?`<hr class="div"><div class="sl mb1">📋 RECURSO / 2ª INSTÂNCIA</div><div class="fg fg2" style="gap:.75rem"><div><div class="sl">Data Recurso</div><div>${fDate(p.data_recurso)}</div></div><div><div class="sl">Recorrente</div><div>${p.recorrente||'—'}</div></div><div><div class="sl">Resultado</div><div>${p.resultado_rec||'—'}</div></div><div><div class="sl">Multa Final</div><div class="cur fw6 tg">${p.multa_rec?fBRL(p.multa_rec):'—'}</div></div></div>`:''}
+    ${vincs?`<hr class="div"><div class="sl">Processos Vinculados</div><div style="margin-top:.5rem">${vincs}</div>`:''}
+    ${p.obs?`<hr class="div"><div class="sl">Obs.</div><div class="ts">${p.obs}</div>`:''}
+  `;
+  openM('mo-ver');
+}
+
+function openNewProc(){
+  popJulgSel();
+  document.getElementById('mo-proc-t').textContent='Novo Processo Administrativo Sancionatório';
+  document.getElementById('pi').value='';
+  ['p-num','p-daut','p-ass','p-forn','p-cnpj','p-endf','p-cons','p-cpfc','p-obs','p-djulg','p-multa','p-fund','p-aten','p-agra','p-drec','p-mrec','p-drec2'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  document.getElementById('p-st').value='em_andamento';['p-res','p-grav','p-trec','p-recor','p-rrec'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('p-trec').value='nao';togRec();
+  curVinc=[];document.getElementById('p-vinc').value='[]';renderVlist();swTab('td');openM('mo-proc');
+}
+
+function popJulgSel(){
+  const o='<option value="">— Selecionar —</option>'+db.julgadores.map(j=>`<option value="${j.id}">${j.nome}</option>`).join('');
+  document.getElementById('p-julg').innerHTML=o;
+  document.getElementById('p-julg2').innerHTML='<option value="">—</option>'+db.julgadores.map(j=>`<option value="${j.id}">${j.nome}</option>`).join('');
+}
+
+function editProc(id){
+  const p=db.processos.find(x=>x.id===id);if(!p)return;
+  popJulgSel();document.getElementById('mo-proc-t').textContent='Editar Processo';document.getElementById('pi').value=id;
+  const F={'p-num':p.numero,'p-daut':p.data_aut,'p-ass':p.assunto,'p-orig':p.origem,'p-forn':p.fornecedor,'p-cnpj':p.cnpj,'p-endf':p.end_forn,'p-cons':p.consumidor,'p-cpfc':p.cpf_cons,'p-obs':p.obs,'p-julg':p.julgador_id,'p-djulg':p.data_julg,'p-st':p.status,'p-res':p.resultado,'p-grav':p.gravidade,'p-multa':p.multa,'p-fund':p.fundamentacao,'p-aten':p.atenuantes,'p-agra':p.agravantes,'p-trec':p.tem_recurso,'p-drec':p.data_recurso,'p-recor':p.recorrente,'p-julg2':p.julg_recurso_id,'p-djrec':p.data_julg_rec,'p-rrec':p.resultado_rec,'p-mrec':p.multa_rec,'p-drec2':p.decisao_rec};
+  Object.entries(F).forEach(([k,v])=>{const e=document.getElementById(k);if(e)e.value=v||''});
+  togRec();curVinc=[...(p.vinculos||[])];document.getElementById('p-vinc').value=JSON.stringify(curVinc);renderVlist();swTab('td');openM('mo-proc');
+}
+
+async function saveProc(){
+  const id=document.getElementById('pi').value;
+  const num=document.getElementById('p-num').value.trim();
+  if(!num){alert('Informe o número do processo.');swTab('td');return}
+  if(!document.getElementById('p-forn').value.trim()){alert('Informe o fornecedor.');swTab('td');return}
+  if(!document.getElementById('p-cons').value.trim()){alert('Informe o consumidor.');swTab('td');return}
+  const p={id:id||uid(),numero:num,data_aut:document.getElementById('p-daut').value,assunto:document.getElementById('p-ass').value,origem:document.getElementById('p-orig').value,fornecedor:document.getElementById('p-forn').value,cnpj:document.getElementById('p-cnpj').value,end_forn:document.getElementById('p-endf').value,consumidor:document.getElementById('p-cons').value,cpf_cons:document.getElementById('p-cpfc').value,obs:document.getElementById('p-obs').value,julgador_id:document.getElementById('p-julg').value,data_julg:document.getElementById('p-djulg').value,status:document.getElementById('p-st').value,resultado:document.getElementById('p-res').value,gravidade:document.getElementById('p-grav').value,multa:parseFloat(document.getElementById('p-multa').value)||0,fundamentacao:document.getElementById('p-fund').value,atenuantes:document.getElementById('p-aten').value,agravantes:document.getElementById('p-agra').value,tem_recurso:document.getElementById('p-trec').value,data_recurso:document.getElementById('p-drec').value,recorrente:document.getElementById('p-recor').value,julg_recurso_id:document.getElementById('p-julg2').value,data_julg_rec:document.getElementById('p-djrec').value,resultado_rec:document.getElementById('p-rrec').value,multa_rec:parseFloat(document.getElementById('p-mrec').value)||0,decisao_rec:document.getElementById('p-drec2').value,vinculos:JSON.parse(document.getElementById('p-vinc').value||'[]')};
+  if(id){const i=db.processos.findIndex(x=>x.id===id);if(i>=0)db.processos[i]=p;}else db.processos.push(p);
+  closeM('mo-proc');if(curPage==='processos')renderProcs();if(curPage==='dashboard')renderDash();agSave();
+}
+
+async function delProc(id){
+  if(!confirm('Confirma a exclusão deste processo?'))return;
+  db.processos=db.processos.filter(p=>p.id!==id);
+  db.processos.forEach(p=>{p.vinculos=(p.vinculos||[]).filter(v=>v!==id)});
+  renderProcs();agSave();
+}
+
+function togRec(){const h=document.getElementById('p-trec').value==='sim';['p-drec','p-recor','p-julg2','p-djrec','p-rrec','p-mrec','p-drec2'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=!h})}
+function searchVinc(){const q=document.getElementById('vsearch').value.toLowerCase();const dr=document.getElementById('vdrop');if(!q){dr.classList.add('hidden');return}const res=db.processos.filter(p=>(p.numero.toLowerCase().includes(q)||p.fornecedor.toLowerCase().includes(q))&&!curVinc.includes(p.id)&&p.id!==document.getElementById('pi').value).slice(0,6);if(!res.length){dr.classList.add('hidden');return}dr.classList.remove('hidden');dr.innerHTML=res.map(p=>`<div class="sri" onclick="addVinc('${p.id}')"><span class="fm ts">${p.numero}</span> — ${p.fornecedor}</div>`).join('')}
+function addVinc(id){if(!curVinc.includes(id)){curVinc.push(id);document.getElementById('p-vinc').value=JSON.stringify(curVinc);renderVlist()}document.getElementById('vsearch').value='';document.getElementById('vdrop').classList.add('hidden')}
+function remVinc(id){curVinc=curVinc.filter(v=>v!==id);document.getElementById('p-vinc').value=JSON.stringify(curVinc);renderVlist()}
+function renderVlist(){const l=document.getElementById('vlist');if(!curVinc.length){l.innerHTML='<span class="ts tmut">Nenhum processo vinculado.</span>';return}l.innerHTML=curVinc.map(id=>{const p=db.processos.find(x=>x.id===id);return p?`<span class="lc">${p.numero} <span class="rem" onclick="remVinc('${id}')">✕</span></span>`:''}).join('')}
+document.addEventListener('click',e=>{if(!e.target.closest('#vsearch')&&!e.target.closest('#vdrop'))document.getElementById('vdrop')?.classList.add('hidden');if(!e.target.closest('#rpi-s')&&!e.target.closest('#rpi-drop'))document.getElementById('rpi-drop')?.classList.add('hidden')});
+
+// ================================================================
+// JULGADORES
+// ================================================================
+function renderJulg(){
+  const tb=document.getElementById('julg-tb');
+  if(!db.julgadores.length){tb.innerHTML=`<tr><td colspan="8"><div class="es"><div class="esi">👥</div><h3>Nenhum julgador</h3></div></td></tr>`;return}
+  tb.innerHTML=db.julgadores.map(j=>{
+    const pp=db.processos.filter(p=>p.julgador_id===j.id);
+    const jj=pp.filter(p=>p.status==='julgado'||p.status==='recurso').length;
+    const tm=pp.reduce((a,p)=>a+gM(p),0);const ef=pp.length?Math.round(jj/pp.length*100):0;
+    return`<tr><td class="fw6">${j.nome}</td><td class="ts tmut">${j.cargo}</td><td><span class="badge ${j.status==='ativo'?'bs':'bg'}">${j.status==='ativo'?'Ativo':'Inativo'}</span></td><td>${pp.length}</td><td>${jj}</td><td class="cur">${tm?fBRL(tm):'—'}</td><td><div style="display:flex;align-items:center;gap:.5rem"><div style="flex:1;height:6px;background:#eee;border-radius:3px"><div style="width:${ef}%;height:100%;background:${ef>70?'var(--suc)':ef>40?'#e6a800':'#c44'};border-radius:3px"></div></div><span class="ts">${ef}%</span></div></td><td><div style="display:flex;gap:.35rem"><button class="btn-icon" onclick="editJulg('${j.id}')">✏️</button><button class="btn-icon" onclick="delJulg('${j.id}')">🗑</button></div></td></tr>`;
+  }).join('');
+}
+
+function openNewJulg(){document.getElementById('ji').value='';document.getElementById('mo-julg-t').textContent='Novo Julgador';['j-nome','j-cargo','j-mat'].forEach(id=>document.getElementById(id).value='');document.getElementById('j-st').value='ativo';openM('mo-julg')}
+function editJulg(id){const j=db.julgadores.find(x=>x.id===id);if(!j)return;document.getElementById('ji').value=id;document.getElementById('mo-julg-t').textContent='Editar Julgador';document.getElementById('j-nome').value=j.nome;document.getElementById('j-cargo').value=j.cargo;document.getElementById('j-mat').value=j.matricula||'';document.getElementById('j-st').value=j.status;openM('mo-julg')}
+async function saveJulg(){const id=document.getElementById('ji').value;const nome=document.getElementById('j-nome').value.trim();const cargo=document.getElementById('j-cargo').value.trim();if(!nome||!cargo){alert('Preencha nome e cargo.');return}const j={id:id||uid(),nome,cargo,matricula:document.getElementById('j-mat').value,status:document.getElementById('j-st').value};if(id){const i=db.julgadores.findIndex(x=>x.id===id);if(i>=0)db.julgadores[i]=j;}else db.julgadores.push(j);closeM('mo-julg');renderJulg();agSave()}
+async function delJulg(id){if(!confirm('Confirma exclusão?'))return;db.julgadores=db.julgadores.filter(j=>j.id!==id);renderJulg();agSave()}
+
+// ================================================================
+// RELATÓRIOS
+// ================================================================
+function switchRpt(r){
+  curRpt=r;
+  document.querySelectorAll('.rpt-tab').forEach((b,i)=>b.classList.toggle('active',['mensal','julgador','fornecedor','periodo','processo'][i]===r));
+  document.querySelectorAll('.rpt-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('rpt-'+r).classList.add('active');
+  if(r==='mensal')renderMensal();
+  if(r==='julgador')renderPorJulg();
+  if(r==='fornecedor')renderPorForn();
+  if(r==='periodo')renderPorPeriodo();
+}
+
+function popRptFilters(){
+  const anos=[...new Set(db.processos.map(p=>p.data_julg?p.data_julg.slice(0,4):p.data_aut?p.data_aut.slice(0,4):null).filter(Boolean))];
+  const cy=new Date().getFullYear().toString();if(!anos.includes(cy))anos.push(cy);anos.sort((a,b)=>b-a);
+  const anoOpts=anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+  const jOpts='<option value="">Todos</option>'+db.julgadores.map(j=>`<option value="${j.id}">${j.nome}</option>`).join('');
+  ['r-ano','rj-ano'].forEach(id=>{const e=document.getElementById(id);if(e){e.innerHTML=anoOpts;e.value=cy}});
+  ['rf-ano'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<option value="">Todos os anos</option>'+anoOpts});
+  ['r-j','rj-j','rp-j'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=jOpts});
+}
+
+function filteredProcs(opts={}){
+  return db.processos.filter(p=>{
+    if(opts.ano&&!(p.data_julg||'').startsWith(opts.ano)&&!(p.data_aut||'').startsWith(opts.ano))return false;
+    if(opts.anoJulg&&!(p.data_julg||'').startsWith(opts.anoJulg))return false;
+    if(opts.julg&&p.julgador_id!==opts.julg)return false;
+    if(opts.forn&&!p.fornecedor.toLowerCase().includes(opts.forn.toLowerCase()))return false;
+    if(opts.di&&(p.data_aut||'')<opts.di)return false;
+    if(opts.df&&(p.data_aut||'')>opts.df)return false;
+    if(opts.st&&p.status!==opts.st)return false;
+    if(opts.julgados&&p.status!=='julgado'&&p.status!=='recurso')return false;
+    if(opts.res&&p.resultado!==opts.res)return false;
+    return true;
+  });
+}
+
+function mkTotais(procs){
+  const tot=procs.reduce((a,p)=>a+gM(p),0);
+  const proc=procs.filter(p=>p.resultado==='procedente').length;
+  const impro=procs.filter(p=>p.resultado==='improcedente').length;
+  const pparc=procs.filter(p=>p.resultado==='parcialmente_procedente').length;
+  return`<div class="tr4">
+    <div class="sc gold"><div class="sl">Total Multas</div><div class="sv" style="font-size:1.2rem">${fBRL(tot)}</div></div>
+    <div class="sc navy"><div class="sl">Qtd. Processos</div><div class="sv">${procs.length}</div></div>
+    <div class="sc suc"><div class="sl">Procedentes</div><div class="sv">${proc}</div></div>
+    <div class="sc warn"><div class="sl">Improcedentes</div><div class="sv">${impro}</div><div class="ss">${pparc} parc. proc.</div></div>
+  </div>`;
+}
+
+function procTable(procs,showJulg=true){
+  if(!procs.length)return'<p style="text-align:center;padding:2rem;color:var(--tmut)">Nenhum processo no período.</p>';
+  return`<div class="tw"><table>
+    <thead><tr><th>Nº Processo</th><th>Fornecedor</th><th>Consumidor</th>${showJulg?'<th>Julgador</th>':''}<th>Resultado</th><th>Status</th><th class="tr">Multa (R$)</th><th>Data Julg.</th></tr></thead>
+    <tbody>${procs.map(p=>`<tr><td class="pn">${p.numero}</td><td>${p.fornecedor}</td><td>${p.consumidor}</td>${showJulg?`<td class="ts">${gJ(p.julgador_id).replace(/^Dr[a]?\. /,'')}</td>`:''}<td>${resB(p.resultado)}</td><td>${stB(p.status)}</td><td class="cur tr">${gM(p)?fBRL(gM(p)):'—'}</td><td class="ts">${fDate(p.data_julg)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr style="background:var(--navy);color:#fff"><td colspan="${showJulg?5:4}" style="padding:.75rem 1rem;font-weight:600">TOTAL</td><td style="padding:.75rem 1rem;font-weight:600" colspan="${showJulg?2:2}" class="tr cur">${fBRL(procs.reduce((a,p)=>a+gM(p),0))}</td><td style="padding:.75rem 1rem"></td></tr></tfoot>
+  </table></div>`;
+}
+
+// RELATÓRIO MENSAL
+function renderMensal(){
+  const ano=document.getElementById('r-ano')?.value||new Date().getFullYear().toString();
+  const ji=document.getElementById('r-j')?.value||'';
+  const re=document.getElementById('r-res')?.value||'';
+  const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const el=document.getElementById('rpt-mensal-body');
+  const procs=filteredProcs({anoJulg:ano,julg:ji||undefined,julgados:true,res:re||undefined});
+  if(!procs.length){el.innerHTML=`<div class="card card-body"><div class="es"><div class="esi">📊</div><h3>Sem dados para o período</h3><p>Nenhum processo julgado em ${ano}.</p></div></div>`;return}
+  let html=`<div class="print-header"><h1>PROCON Maceió — Relatório Mensal ${ano}</h1><p>Gerado em ${new Date().toLocaleDateString('pt-BR')} | ${ji?gJ(ji):'Todos os Julgadores'}</p></div>`;
+  html+=mkTotais(procs);
+  for(let m=1;m<=12;m++){
+    const mS=String(m).padStart(2,'0');
+    const mp=procs.filter(p=>(p.data_julg||'').startsWith(`${ano}-${mS}`));
+    if(!mp.length)continue;
+    const mtot=mp.reduce((a,p)=>a+gM(p),0);
+    html+=`<div class="card mb2">
+      <div class="card-header" style="background:var(--navy)"><span class="card-title" style="color:#fff">${nomeMes[m-1]}/${ano}</span><span style="color:var(--gold-light);font-family:'IBM Plex Mono',monospace;font-weight:600">${fBRL(mtot)}</span></div>
+      <div class="card-body" style="padding:0">${procTable(mp)}</div>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+// POR JULGADOR
+function renderPorJulg(){
+  const ji=document.getElementById('rj-j')?.value||'';
+  const ano=document.getElementById('rj-ano')?.value||new Date().getFullYear().toString();
+  const el=document.getElementById('rpt-julg-body');
+  const julgs=ji?db.julgadores.filter(j=>j.id===ji):db.julgadores;
+  if(!julgs.length){el.innerHTML='<p>Nenhum julgador cadastrado.</p>';return}
+  let html=`<div class="print-header"><h1>PROCON Maceió — Relatório por Julgador ${ano}</h1><p>Gerado em ${new Date().toLocaleDateString('pt-BR')}</p></div>`;
+  // Tabela resumo
+  html+=`<div class="card mb2"><div class="card-header"><span class="card-title">Resumo por Julgador — ${ano}</span></div><div class="card-body" style="padding:0"><div class="tw"><table><thead><tr><th>Julgador</th><th>Processos</th><th>Julgados</th><th>Procedentes</th><th>Improcedentes</th><th class="tr">Total Multas</th><th>Eficiência</th></tr></thead><tbody>`;
+  let gtot=0;
+  julgs.forEach(j=>{
+    const pp=filteredProcs({anoJulg:ano,julg:j.id,julgados:true});
+    const proc=pp.filter(p=>p.resultado==='procedente').length;
+    const imp=pp.filter(p=>p.resultado==='improcedente').length;
+    const tot=pp.reduce((a,p)=>a+gM(p),0);gtot+=tot;
+    const ef=pp.length?Math.round(proc/pp.length*100):0;
+    html+=`<tr><td class="fw6">${j.nome}</td><td>${pp.length}</td><td>${pp.filter(p=>p.status==='julgado'||p.status==='recurso').length}</td><td>${proc}</td><td>${imp}</td><td class="cur tr">${tot?fBRL(tot):'—'}</td><td>${ef}%</td></tr>`;
+  });
+  html+=`<tr style="background:var(--navy);color:#fff"><td class="fw6" style="padding:.75rem 1rem">TOTAL</td><td colspan="4" style="padding:.75rem 1rem"></td><td style="padding:.75rem 1rem;font-weight:600" class="tr cur">${fBRL(gtot)}</td><td style="padding:.75rem 1rem"></td></tr>`;
+  html+=`</tbody></table></div></div></div>`;
+  // Detalhamento por julgador
+  julgs.forEach(j=>{
+    const pp=filteredProcs({anoJulg:ano,julg:j.id,julgados:true});
+    if(!pp.length)return;
+    html+=`<div class="card mb2"><div class="card-header"><span class="card-title">${j.nome}</span><span class="cur" style="color:var(--gold)">${fBRL(pp.reduce((a,p)=>a+gM(p),0))}</span></div><div class="card-body" style="padding:0">${procTable(pp,false)}</div></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// POR FORNECEDOR
+function renderPorForn(){
+  const ff=(document.getElementById('rf-f')?.value||'').toLowerCase();
+  const ano=document.getElementById('rf-ano')?.value||'';
+  const el=document.getElementById('rpt-forn-body');
+  let procs=db.processos;
+  if(ff)procs=procs.filter(p=>p.fornecedor.toLowerCase().includes(ff));
+  if(ano)procs=procs.filter(p=>(p.data_julg||p.data_aut||'').startsWith(ano));
+  const fornGrp={};
+  procs.forEach(p=>{if(!fornGrp[p.fornecedor])fornGrp[p.fornecedor]=[];fornGrp[p.fornecedor].push(p)});
+  const forns=Object.entries(fornGrp).sort((a,b)=>b[1].reduce((s,p)=>s+gM(p),0)-a[1].reduce((s,p)=>s+gM(p),0));
+  if(!forns.length){el.innerHTML=`<div class="card card-body"><div class="es"><div class="esi">🏢</div><h3>Nenhum fornecedor encontrado</h3></div></div>`;return}
+  let html=`<div class="print-header"><h1>PROCON Maceió — Relatório por Fornecedor</h1><p>Gerado em ${new Date().toLocaleDateString('pt-BR')}${ano?' | '+ano:''}</p></div>`;
+  // Resumo
+  const gtot=procs.reduce((a,p)=>a+gM(p),0);
+  html+=`<div class="total-highlight"><div><div class="th-label">Total de Fornecedores</div><div style="font-size:1.5rem;font-weight:700;color:#fff">${forns.length}</div></div><div><div class="th-label">Total de Processos</div><div style="font-size:1.5rem;font-weight:700;color:#fff">${procs.length}</div></div><div><div class="th-label">Total de Multas</div><div class="th-value">${fBRL(gtot)}</div></div></div>`;
+  html+=`<div class="card mb2"><div class="card-header"><span class="card-title">Ranking por Multa Aplicada</span></div><div class="card-body" style="padding:0"><div class="tw"><table><thead><tr><th>#</th><th>Fornecedor</th><th>CNPJ/CPF</th><th>Processos</th><th>Procedentes</th><th>Improcedentes</th><th class="tr">Total Multas</th></tr></thead><tbody>`;
+  forns.forEach(([forn,pp],idx)=>{
+    const proc=pp.filter(p=>p.resultado==='procedente').length;
+    const imp=pp.filter(p=>p.resultado==='improcedente').length;
+    const tot=pp.reduce((a,p)=>a+gM(p),0);
+    const cnpj=pp[0]?.cnpj||'—';
+    html+=`<tr><td class="fw6">${idx+1}</td><td class="fw6">${forn}</td><td class="fm ts">${cnpj}</td><td>${pp.length}</td><td>${proc}</td><td>${imp}</td><td class="cur tr fw6 tg">${tot?fBRL(tot):'—'}</td></tr>`;
+  });
+  html+=`</tbody></table></div></div></div>`;
+  forns.forEach(([forn,pp])=>{
+    html+=`<div class="card mb2"><div class="card-header"><span class="card-title">${forn}</span><span class="cur" style="color:var(--gold)">${fBRL(pp.reduce((a,p)=>a+gM(p),0))}</span></div><div class="card-body" style="padding:0">${procTable(pp)}</div></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// POR PERÍODO
+function renderPorPeriodo(){
+  const di=document.getElementById('rp-di')?.value||'';
+  const df=document.getElementById('rp-df')?.value||'';
+  const ji=document.getElementById('rp-j')?.value||'';
+  const st=document.getElementById('rp-st')?.value||'';
+  const el=document.getElementById('rpt-per-body');
+  if(!di&&!df){el.innerHTML=`<div class="card card-body"><div class="es"><div class="esi">📆</div><h3>Selecione o período</h3><p>Informe ao menos uma data para filtrar os processos.</p></div></div>`;return}
+  const procs=filteredProcs({di:di||undefined,df:df||undefined,julg:ji||undefined,st:st||undefined});
+  let html=`<div class="print-header"><h1>PROCON Maceió — Relatório por Período</h1><p>Gerado em ${new Date().toLocaleDateString('pt-BR')} | ${di?fDate(di):'início'} até ${df?fDate(df):'hoje'}</p></div>`;
+  html+=mkTotais(procs);
+  html+=`<div class="card"><div class="card-header"><span class="card-title">Processos no Período${di||df?' ('+( di?fDate(di):'—')+' a '+(df?fDate(df):'—')+')':''}</span></div><div class="card-body" style="padding:0">${procTable(procs)}</div></div>`;
+  el.innerHTML=html;
+}
+
+// PROCESSO INDIVIDUAL
+function searchProcRpt(){
+  const q=document.getElementById('rpi-s').value.toLowerCase();
+  const dr=document.getElementById('rpi-drop');
+  if(!q){dr.classList.add('hidden');return}
+  const res=db.processos.filter(p=>p.numero.toLowerCase().includes(q)||p.fornecedor.toLowerCase().includes(q)).slice(0,8);
+  if(!res.length){dr.classList.add('hidden');return}
+  dr.classList.remove('hidden');
+  dr.innerHTML=res.map(p=>`<div class="sri" onclick="renderProcInd('${p.id}')"><span class="fm ts">${p.numero}</span> — ${p.fornecedor}</div>`).join('');
+}
+
+function renderProcInd(id){
+  document.getElementById('rpi-drop').classList.add('hidden');
+  const p=db.processos.find(x=>x.id===id);if(!p)return;
+  const j=db.julgadores.find(x=>x.id===p.julgador_id);
+  const j2=db.julgadores.find(x=>x.id===p.julg_recurso_id);
+  const vincs=(p.vinculos||[]).map(vid=>{const vp=db.processos.find(x=>x.id===vid);return vp?vp.numero:''}).filter(Boolean).join(', ');
+  document.getElementById('rpi-s').value=p.numero;
+  document.getElementById('rpt-proc-body').innerHTML=`
+  <div class="print-header"><h1>PROCON Maceió — Processo Administrativo Sancionatório</h1><p>Emitido em ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})}</p></div>
+  <div class="card mb2">
+    <div class="card-header"><span class="card-title">Identificação do Processo</span></div>
+    <div class="card-body">
+      <div class="fg fg3" style="gap:.75rem">
+        <div><div class="sl">Nº do Processo</div><div class="pn" style="font-size:1rem">${p.numero}</div></div>
+        <div><div class="sl">Data de Autuação</div><div>${fDate(p.data_aut)}</div></div>
+        <div><div class="sl">Origem</div><div>${p.origem||'—'}</div></div>
+        <div class="full"><div class="sl">Assunto / Infração</div><div class="fw6">${p.assunto||'—'}</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card mb2">
+    <div class="card-header"><span class="card-title">Partes</span></div>
+    <div class="card-body">
+      <div class="fg fg2" style="gap:.75rem">
+        <div><div class="sl">Fornecedor (Reclamado)</div><div class="fw6">${p.fornecedor}</div></div>
+        <div><div class="sl">CNPJ / CPF</div><div class="fm">${p.cnpj||'—'}</div></div>
+        <div class="full"><div class="sl">Endereço</div><div>${p.end_forn||'—'}</div></div>
+        <div><div class="sl">Consumidor (Reclamante)</div><div class="fw6">${p.consumidor}</div></div>
+        <div><div class="sl">CPF / RG</div><div class="fm">${p.cpf_cons||'—'}</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card mb2">
+    <div class="card-header"><span class="card-title">1ª Instância</span></div>
+    <div class="card-body">
+      <div class="fg fg3" style="gap:.75rem">
+        <div><div class="sl">Julgador</div><div>${j?j.nome:'—'}</div></div>
+        <div><div class="sl">Data do Julgamento</div><div>${fDate(p.data_julg)}</div></div>
+        <div><div class="sl">Status</div><div>${stB(p.status)}</div></div>
+        <div><div class="sl">Resultado</div><div>${resB(p.resultado)}</div></div>
+        <div><div class="sl">Gravidade</div><div>${p.gravidade||'—'}</div></div>
+        <div><div class="sl">Valor da Multa</div><div class="cur fw6 tg" style="font-size:1.1rem">${p.multa?fBRL(p.multa):'R$ 0,00'}</div></div>
+        ${p.fundamentacao?`<div style="grid-column:1/-1"><div class="sl">Fundamentação / Dispositivo</div><div class="ts" style="line-height:1.7;margin-top:.25rem;padding:1rem;background:var(--cream);border-radius:6px">${p.fundamentacao}</div></div>`:''}
+        ${p.atenuantes?`<div style="grid-column:1/-1"><div class="sl">Circunstâncias Atenuantes</div><div class="ts">${p.atenuantes}</div></div>`:''}
+        ${p.agravantes?`<div style="grid-column:1/-1"><div class="sl">Circunstâncias Agravantes</div><div class="ts">${p.agravantes}</div></div>`:''}
+      </div>
+    </div>
+  </div>
+  ${p.tem_recurso==='sim'?`<div class="card mb2">
+    <div class="card-header"><span class="card-title">Recurso / 2ª Instância</span></div>
+    <div class="card-body">
+      <div class="fg fg3" style="gap:.75rem">
+        <div><div class="sl">Data do Recurso</div><div>${fDate(p.data_recurso)}</div></div>
+        <div><div class="sl">Recorrente</div><div>${p.recorrente||'—'}</div></div>
+        <div><div class="sl">Julgador (2ª Inst.)</div><div>${j2?j2.nome:'—'}</div></div>
+        <div><div class="sl">Data Julg. (Recurso)</div><div>${fDate(p.data_julg_rec)}</div></div>
+        <div><div class="sl">Resultado do Recurso</div><div>${p.resultado_rec||'—'}</div></div>
+        <div><div class="sl">Multa Final</div><div class="cur fw6 tg" style="font-size:1.1rem">${p.multa_rec?fBRL(p.multa_rec):'—'}</div></div>
+        ${p.decisao_rec?`<div style="grid-column:1/-1"><div class="sl">Decisão do Recurso</div><div class="ts" style="padding:1rem;background:var(--cream);border-radius:6px">${p.decisao_rec}</div></div>`:''}
+      </div>
+    </div>
+  </div>`:''}
+  ${vincs?`<div class="card mb2"><div class="card-header"><span class="card-title">Processos Vinculados</span></div><div class="card-body"><div class="ts">${vincs}</div></div></div>`:''}
+  ${p.obs?`<div class="card mb2"><div class="card-header"><span class="card-title">Observações</span></div><div class="card-body"><div class="ts">${p.obs}</div></div></div>`:''}
+  `;
+}
+
+// ================================================================
+// PRINT PDF
+// ================================================================
+function printRpt(tipo){
+  window.print();
+}
+
+// ================================================================
+// CSV EXPORTS
+// ================================================================
+function csvDownload(rows,nome){
+  const blob=new Blob(['\uFEFF'+rows],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nome;a.click();URL.revokeObjectURL(url);
+}
+
+function csvMensal(){
+  const ano=document.getElementById('r-ano')?.value||new Date().getFullYear().toString();
+  const ji=document.getElementById('r-j')?.value||'';
+  const procs=filteredProcs({anoJulg:ano,julg:ji||undefined,julgados:true});
+  const h='Nº Processo;Fornecedor;CNPJ;Consumidor;Julgador;Mês;Data Julg.;Status;Resultado;Multa (R$);Multa Final (R$)\n';
+  const r=procs.map(p=>`${p.numero};${p.fornecedor};${p.cnpj||''};${p.consumidor};${gJ(p.julgador_id)};${(p.data_julg||'').slice(0,7)};${fDate(p.data_julg)};${p.status};${p.resultado||''};${(p.multa||0).toFixed(2).replace('.',',')};${gM(p).toFixed(2).replace('.',',')}`).join('\n');
+  csvDownload(h+r,`procon_mensal_${ano}.csv`);
+}
+
+function csvPorJulg(){
+  const ji=document.getElementById('rj-j')?.value||'';
+  const ano=document.getElementById('rj-ano')?.value||new Date().getFullYear().toString();
+  const procs=filteredProcs({anoJulg:ano,julg:ji||undefined,julgados:true});
+  const h='Nº Processo;Fornecedor;Consumidor;Julgador;Data Julg.;Resultado;Multa Final (R$)\n';
+  const r=procs.map(p=>`${p.numero};${p.fornecedor};${p.consumidor};${gJ(p.julgador_id)};${fDate(p.data_julg)};${p.resultado||''};${gM(p).toFixed(2).replace('.',',')}`).join('\n');
+  csvDownload(h+r,`procon_julgador_${ano}.csv`);
+}
+
+function csvPorForn(){
+  const ff=(document.getElementById('rf-f')?.value||'').toLowerCase();
+  const ano=document.getElementById('rf-ano')?.value||'';
+  let procs=db.processos;
+  if(ff)procs=procs.filter(p=>p.fornecedor.toLowerCase().includes(ff));
+  if(ano)procs=procs.filter(p=>(p.data_julg||p.data_aut||'').startsWith(ano));
+  const h='Fornecedor;CNPJ;Nº Processo;Consumidor;Julgador;Data Julg.;Resultado;Multa Final (R$)\n';
+  const r=procs.map(p=>`${p.fornecedor};${p.cnpj||''};${p.numero};${p.consumidor};${gJ(p.julgador_id)};${fDate(p.data_julg)};${p.resultado||''};${gM(p).toFixed(2).replace('.',',')}`).join('\n');
+  csvDownload(h+r,`procon_fornecedor.csv`);
+}
+
+function csvPorPeriodo(){
+  const di=document.getElementById('rp-di')?.value||'';const df=document.getElementById('rp-df')?.value||'';
+  const ji=document.getElementById('rp-j')?.value||'';const st=document.getElementById('rp-st')?.value||'';
+  const procs=filteredProcs({di:di||undefined,df:df||undefined,julg:ji||undefined,st:st||undefined});
+  const h='Nº Processo;Fornecedor;Consumidor;Julgador;Data Aut.;Data Julg.;Status;Resultado;Multa Final (R$)\n';
+  const r=procs.map(p=>`${p.numero};${p.fornecedor};${p.consumidor};${gJ(p.julgador_id)};${fDate(p.data_aut)};${fDate(p.data_julg)};${p.status};${p.resultado||''};${gM(p).toFixed(2).replace('.',',')}`).join('\n');
+  csvDownload(h+r,`procon_periodo_${di||'inicio'}_${df||'fim'}.csv`);
+}
+
+document.getElementById('btn-np').onclick=openNewProc;
+</script>
+</body>
+</html>
